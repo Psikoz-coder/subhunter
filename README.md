@@ -33,7 +33,7 @@ A powerful subdomain enumeration tool that combines multiple data sources for co
 ### Install with go install
 ```bash
 # Install the specific version
-go install github.com/Psikoz-coder/subhunter@v0.1.1
+go install github.com/Psikoz-coder/subhunter@v0.1.2
 
 # Make sure your Go bin directory is in your PATH
 export PATH="$PATH:$(go env GOPATH)/bin"
@@ -61,7 +61,7 @@ docker run -it --rm ghcr.io/psikoz-coder/subhunter -d example.com
 
 ### Update to Latest Version
 ```bash
-go install github.com/Psikoz-coder/subhunter@v0.1.1
+go install github.com/Psikoz-coder/subhunter@v0.1.2
 ```
 
 ## 🚀 Quick Start
