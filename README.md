@@ -157,10 +157,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## ⚠️ Legal Disclaimer
 
 This tool is intended for security testing and research purposes only. Only use on targets you own or have explicit permission to test. The developers assume no liability and are not responsible for any misuse or damage caused by this program.
