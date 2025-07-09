@@ -302,29 +302,11 @@ func compareSubdomains(ours, theirs []string) (onlyOurs, onlyTheirs, common []st
 	return onlyOurs, onlyTheirs, common
 }
 
-func writeComparisonResults(ours, theirs, common []string, domain string) error {
+func writeComparisonResults(ours, theirs, common []string, domain string, config *Config) error {
 	timestamp := time.Now().Format("20060102_150405")
 	
-	// Write only our subdomains
-	onlyOursFile := fmt.Sprintf("subhunter_only_%s_%s.txt", domain, timestamp)
-	if err := writeResults(ours, onlyOursFile); err != nil {
-		return fmt.Errorf("error writing our subdomains: %v", err)
-	}
-
-	// Write only their subdomains
-	onlyTheirsFile := fmt.Sprintf("subfinder_only_%s_%s.txt", domain, timestamp)
-	if err := writeResults(theirs, onlyTheirsFile); err != nil {
-		return fmt.Errorf("error writing their subdomains: %v", err)
-	}
-
-	// Write common subdomains
-	commonFile := fmt.Sprintf("common_%s_%s.txt", domain, timestamp)
-	if err := writeResults(common, commonFile); err != nil {
-		return fmt.Errorf("error writing common subdomains: %v", err)
-	}
-
-	// Write summary
-	summaryFile := fmt.Sprintf("comparison_summary_%s_%s.txt", domain, timestamp)
+	// Write comparison results - only create the main output file
+	onlyOursFile := config.Output
 	summary := fmt.Sprintf(`Subdomain Comparison Summary
 ==========================
 Date: %s
@@ -336,11 +318,6 @@ Other tool found: %d subdomains
 Unique to SubHunter: %d
 Unique to other tool: %d
 Common subdomains: %d
-
-Files created:
-- %s (SubHunter only)
-- %s (Other tool only)
-- %s (Common subdomains)
 `,
 		time.Now().Format("2006-01-02 15:04:05"),
 		domain,
@@ -349,9 +326,6 @@ Files created:
 		len(ours),
 		len(theirs),
 		len(common),
-		onlyOursFile,
-		onlyTheirsFile,
-		commonFile,
 	)
 
 	if err := os.WriteFile(summaryFile, []byte(summary), 0644); err != nil {
@@ -498,9 +472,7 @@ func main() {
 
 	// Set default output filename if not provided
 	if config.Output == "" {
-		config.Output = fmt.Sprintf("subhunter_%s_%s.txt", 
-			strings.ReplaceAll(config.Domain, ".", "_"),
-			time.Now().Format("20060102_150405"))
+		config.Output = fmt.Sprintf("subhunter_%s.txt", config.Domain)
 	}
 
 	// Normalize domain (remove http://, https://, and trailing slashes)

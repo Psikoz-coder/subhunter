@@ -30,10 +30,10 @@ A powerful subdomain enumeration tool that combines multiple data sources for co
 - Go 1.16 or higher
 - Internet connection
 
-### Install with go install (Recommended)
+### Install with go install
 ```bash
-# Install the latest version
-go install github.com/Psikoz-coder/subhunter@latest
+# Install the specific version
+go install github.com/Psikoz-coder/subhunter@v0.1.0
 
 # Make sure your Go bin directory is in your PATH
 export PATH="$PATH:$(go env GOPATH)/bin"
@@ -61,7 +61,7 @@ docker run -it --rm ghcr.io/psikoz-coder/subhunter -d example.com
 
 ### Update to Latest Version
 ```bash
-go install github.com/Psikoz-coder/subhunter@latest
+go install github.com/Psikoz-coder/subhunter@v0.1.0
 ```
 
 ## 🚀 Quick Start
