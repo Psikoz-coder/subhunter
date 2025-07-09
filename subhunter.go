@@ -2,14 +2,16 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"math/big"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
-	rand "math/rand"
 	"regexp"
 	"sort"
 	"strings"
@@ -33,7 +35,6 @@ var httpClient *http.Client
 
 // init function to initialize package level variables
 func init() {
-	rand.Seed(time.Now().UnixNano())
 	httpClient = &http.Client{
 		Timeout: 30 * time.Second,
 		Transport: &http.Transport{
@@ -91,7 +92,8 @@ func makeRequest(url string, config *Config) (string, error) {
 	}
 
 	// Set a random user agent
-	userAgent := config.UserAgents[rand.Intn(len(config.UserAgents))]
+	n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(config.UserAgents))))
+	userAgent := config.UserAgents[n.Int64()]
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Connection", "keep-alive")
@@ -128,40 +130,40 @@ func extractSubdomains(body, domain string) []string {
 func rapidDNS(domain string, config *Config) []string {
 	log(config, "Scanning RapidDNS...")
 	url := fmt.Sprintf("https://rapiddns.io/subdomain/%s?full=1#result", domain)
-	body, err := makeRequest(url)
+	resp, err := makeRequest(url, config)
 	if err != nil {
 		log(config, fmt.Sprintf("RapidDNS error: %v", err))
 		return nil
 	}
-	return extractSubdomains(body, domain)
+	return extractSubdomains(resp, domain)
 }
 
 func riddler(domain string, config *Config) []string {
 	log(config, "Scanning Riddler...")
 	url := fmt.Sprintf("https://riddler.io/search/exportcsv?q=pld:%s", domain)
-	body, err := makeRequest(url)
+	resp, err := makeRequest(url, config)
 	if err != nil {
 		log(config, fmt.Sprintf("Riddler error: %v", err))
 		return nil
 	}
-	return extractSubdomains(body, domain)
+	return extractSubdomains(resp, domain)
 }
 
 func jldcAnubis(domain string, config *Config) []string {
 	log(config, "Scanning JLDC Anubis...")
 	url := fmt.Sprintf("https://jldc.me/anubis/subdomains/%s", domain)
-	body, err := makeRequest(url)
+	resp, err := makeRequest(url, config)
 	if err != nil {
 		log(config, fmt.Sprintf("JLDC Anubis error: %v", err))
 		return nil
 	}
-	return extractSubdomains(body, domain)
+	return extractSubdomains(resp, domain)
 }
 
 func crtSh(domain string, config *Config) []string {
 	log(config, "Scanning crt.sh...")
 	url := fmt.Sprintf("https://crt.sh/?q=%%.%s&output=json", domain)
-	body, err := makeRequest(url)
+	resp, err := makeRequest(url, config)
 	if err != nil {
 		log(config, fmt.Sprintf("crt.sh error: %v", err))
 		return nil
@@ -170,7 +172,7 @@ func crtSh(domain string, config *Config) []string {
 	var crtData []CrtResponse
 	// crt.sh can return a single object on error, so we handle that by ignoring unmarshal errors.
 	// The cleanAndFilter function will discard invalid entries anyway.
-	_ = json.Unmarshal([]byte(body), &crtData)
+	_ = json.Unmarshal([]byte(resp), &crtData)
 
 	var result []string
 	for _, entry := range crtData {
@@ -189,7 +191,7 @@ func crtSh(domain string, config *Config) []string {
 func bufferOver(domain string, config *Config) []string {
 	log(config, "Scanning BufferOver...")
 	url := fmt.Sprintf("https://dns.bufferover.run/dns?q=.%s", domain)
-	body, err := makeRequest(url)
+	resp, err := makeRequest(url, config)
 	if err != nil {
 		log(config, fmt.Sprintf("BufferOver error: %v", err))
 		return nil
@@ -197,7 +199,7 @@ func bufferOver(domain string, config *Config) []string {
 
 	var bufferData BufferOverResponse
 	// Similar to crt.sh, ignore JSON parsing errors for now.
-	_ = json.Unmarshal([]byte(body), &bufferData)
+	_ = json.Unmarshal([]byte(resp), &bufferData)
 
 	var result []string
 	for _, entry := range bufferData.FDNSA {
@@ -213,12 +215,12 @@ func bufferOver(domain string, config *Config) []string {
 func urlScan(domain string, config *Config) []string {
 	log(config, "Scanning URLScan...")
 	url := fmt.Sprintf("https://urlscan.io/domain/%s", domain)
-	body, err := makeRequest(url)
+	resp, err := makeRequest(url, config)
 	if err != nil {
 		log(config, fmt.Sprintf("URLScan error: %v", err))
 		return nil
 	}
-	return extractSubdomains(body, domain)
+	return extractSubdomains(resp, domain)
 }
 
 func cleanAndFilter(subdomains []string, domain string) []string {
@@ -405,7 +407,16 @@ func runCheck() {
 	}
 
 	// Check internet connection
-	_, err = httpClient.Get("https://www.google.com")
+	tr := &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 10 * time.Second,
+	}
+
+	client := &http.Client{Transport: tr}
+	_, err = client.Get("https://www.google.com")
 	if err != nil {
 		fmt.Printf("%s[-]%s No internet connection: %v\n", Red+Bold, Reset, err)
 	} else {
