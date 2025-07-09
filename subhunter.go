@@ -303,10 +303,14 @@ func compareSubdomains(ours, theirs []string) (onlyOurs, onlyTheirs, common []st
 }
 
 func writeComparisonResults(ours, theirs, common []string, domain string, config *Config) error {
+	// Write our unique subdomains to the main output file
+	if err := writeResults(ours, config.Output); err != nil {
+		return fmt.Errorf("error writing our subdomains: %v", err)
+	}
+
 	timestamp := time.Now().Format("20060102_150405")
 	
-	// Write comparison results - only create the main output file
-	onlyOursFile := config.Output
+	summaryFile := fmt.Sprintf("%s_%s_summary.txt", strings.TrimSuffix(config.Output, ".txt"), timestamp)
 	summary := fmt.Sprintf(`Subdomain Comparison Summary
 ==========================
 Date: %s
@@ -537,7 +541,7 @@ func main() {
 		onlyOurs, onlyTheirs, common := compareSubdomains(cleanResults, otherSubdomains)
 
 		// Write comparison results
-		if err := writeComparisonResults(onlyOurs, onlyTheirs, common, config.Domain); err != nil {
+		if err := writeComparisonResults(onlyOurs, onlyTheirs, common, config.Domain, &config); err != nil {
 			fmt.Printf("%s[!]%s Error writing comparison results: %v%s\n", Red+Bold, Reset, err, Reset)
 			os.Exit(1)
 		}
