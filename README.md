@@ -30,12 +30,38 @@ A powerful subdomain enumeration tool that combines multiple data sources for co
 - Go 1.16 or higher
 - Internet connection
 
+### Install with go install (Recommended)
+```bash
+# Install the latest version
+go install github.com/Psikoz-coder/subhunter@latest
+
+# Make sure your Go bin directory is in your PATH
+export PATH="$PATH:$(go env GOPATH)/bin"
+
+# Verify installation
+subhunter --help
+```
+
 ### Install from Source
 ```bash
-git clone https://github.com/yourusername/subhunter.git
+git clone https://github.com/Psikoz-coder/subhunter.git
 cd subhunter
 go build -o subhunter
 sudo mv subhunter /usr/local/bin/
+```
+
+### Docker Installation
+```bash
+# Pull the latest image
+docker pull ghcr.io/psikoz-coder/subhunter:latest
+
+# Run the container
+docker run -it --rm ghcr.io/psikoz-coder/subhunter -d example.com
+```
+
+### Update to Latest Version
+```bash
+go install github.com/Psikoz-coder/subhunter@latest
 ```
 
 ## 🚀 Quick Start
@@ -147,6 +173,6 @@ For questions or feedback, please open an issue on GitHub.
 
 ⭐ **If you find this tool useful, please give it a star!**
 
-🐛 **Found a bug?** [Open an issue](https://github.com/yourusername/subhunter/issues)
+🐛 **Found a bug?** [Open an issue](https://github.com/Psikoz-coder/subhunter/issues)
 
-💡 **Have a feature request?** [Start a discussion](https://github.com/yourusername/subhunter/discussions)
+💡 **Have a feature request?** [Start a discussion](https://github.com/Psikoz-coder/subhunter/discussions)
